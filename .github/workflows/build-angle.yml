@@ -12,6 +12,7 @@ on:
         required: true
         type: choice
         options:
+          - default
           - d3d9
           - d3d11
           - gl
@@ -19,6 +20,7 @@ on:
           - vulkan
           - essl
           - glsl
+        default: default
       upload-artifacts:
         description: 'Upload build artifacts to S3 storage'
         required: true
@@ -40,20 +42,57 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Restore depot tools
+        id: cache-depot-tools
+        uses: actions/cache@v4
+        with:
+          path: depot_tools/**
+          key: depot-tools-macos
+
+      - name: Install depot tools
+        if: steps.cache-depot-tools.outputs.cache-hit != 'true'
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+
+      - name: Cache depot tools
+        if: steps.cache-depot-tools.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: depot_tools/**
+          key: depot-tools-macos
+
+      - name: Restore ANGLE repository
+        id: cache-angle
+        uses: actions/cache@v4
+        with:
+          path: angle/**
+          key: angle-${{ github.event.inputs['angle-branch'] }}-macos
+
+      - name: Clone ANGLE repository
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
         with:
           repository: google/angle
           ref: ${{ github.event.inputs['angle-branch'] }}
           path: angle
 
-      - run: |
-          ls .
-          ls angle
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Synchronize ANGLE repository
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        run: |
           export PATH="${PWD}/depot_tools:${PATH}"
           cd angle
           python scripts/bootstrap.py
           gclient sync
-          gn gen out/Release
-          cd out/Release
-          ninja
+
+      - name: Cache ANGLE repository
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        with:
+          path: angle/**
+          key: angle-${{ github.event.inputs['angle-branch'] }}-macos
+
+      - name: Build ANGLE
+        run: |
+          export PATH="${PWD}/depot_tools:${PATH}"
+          cd angle
+          gn gen out/Release --args='is_debug=false'
+          ninja -j 2 -k1 -C out/Release
