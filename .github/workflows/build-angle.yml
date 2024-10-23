@@ -12,8 +12,13 @@ on:
         required: true
         type: choice
         options:
-          - foo
-          - bar
+          - d3d9
+          - d3d11
+          - gl
+          - metal
+          - vulkan
+          - essl
+          - glsl
       upload-artifacts:
         description: 'Upload build artifacts to S3 storage'
         required: true
@@ -39,4 +44,8 @@ jobs:
         with:
           repository: google/angle
           ref: ${{ github.event.inputs['angle-branch'] }}
-      - run: ls .
+      - run: |
+          ls .
+          gn gen out/Release
+          cd out/Release
+          ninja
