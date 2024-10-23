@@ -46,7 +46,7 @@ jobs:
         id: cache-depot-tools
         uses: actions/cache@v4
         with:
-          path: depot_tools/**
+          path: depot_tools
           key: depot-tools-macos
 
       - name: Install depot tools
@@ -58,14 +58,14 @@ jobs:
         if: steps.cache-depot-tools.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
-          path: depot_tools/**
+          path: depot_tools
           key: depot-tools-macos
 
       - name: Restore ANGLE repository
         id: cache-angle
         uses: actions/cache@v4
         with:
-          path: angle/**
+          path: angle
           key: angle-${{ github.event.inputs['angle-branch'] }}-macos
 
       - name: Clone ANGLE repository
@@ -88,7 +88,7 @@ jobs:
         if: steps.cache-angle.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
-          path: angle/**
+          path: angle
           key: angle-${{ github.event.inputs['angle-branch'] }}-macos
 
       - name: Build ANGLE
