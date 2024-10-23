@@ -44,8 +44,14 @@ jobs:
         with:
           repository: google/angle
           ref: ${{ github.event.inputs['angle-branch'] }}
+          path: angle
+
       - run: |
           ls .
+          ls angle
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          export PATH="${PWD}/depot_tools:${PATH}"
+          cd angle
           python scripts/bootstrap.py
           gclient sync
           gn gen out/Release
