@@ -46,6 +46,8 @@ jobs:
           ref: ${{ github.event.inputs['angle-branch'] }}
       - run: |
           ls .
+          python scripts/bootstrap.py
+          gclient sync
           gn gen out/Release
           cd out/Release
           ninja
