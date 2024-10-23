@@ -86,6 +86,7 @@ jobs:
 
       - name: Cache ANGLE repository
         if: steps.cache-angle.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
         with:
           path: angle/**
           key: angle-${{ github.event.inputs['angle-branch'] }}-macos
