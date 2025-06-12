@@ -36,8 +36,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: angle.tar.gz
-          # XXX: Rename the key to remove the '/'  character
-          key: angle-${{ github.event.inputs['angle-branch'] }}-macos
+          key: angle-${{ replace(github.event.inputs['angle-branch'], '/', '-') }}-macos
 
       - name: Clone ANGLE repository
         if: steps.cache-angle.outputs.cache-hit != 'true'
@@ -63,8 +62,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: angle.tar.gz
-          # XXX: Rename the key to remove the '/'  character
-          key: angle-${{ github.event.inputs['angle-branch'] }}-macos
+          key: angle-${{ replace(github.event.inputs['angle-branch'], '/', '-') }}-macos
 
       - name: Build ANGLE
         run: |
