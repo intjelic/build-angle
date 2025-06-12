@@ -31,12 +31,21 @@ jobs:
           path: depot_tools
           key: depot-tools-macos
 
+      - name: Set up ANGLE cache key
+        id: angle-key
+        run: |
+          BRANCH="${{ github.event.inputs.angle-branch }}"
+          # Replace slashes with dashes for cache key
+          CLEAN_BRANCH="${BRANCH//\//-}"
+          echo "angle-$CLEAN_BRANCH-macos"
+          echo "key=angle-$CLEAN_BRANCH-macos" >> $GITHUB_OUTPUT
+
       - name: Restore ANGLE repository
         id: cache-angle
         uses: actions/cache/restore@v4
         with:
           path: angle.tar.gz
-          key: angle-${{ replace(github.event.inputs.angle-branch, '/', '-') }}-macos
+          key: ${{ steps.angle-key.outputs.key }}
 
       - name: Clone ANGLE repository
         if: steps.cache-angle.outputs.cache-hit != 'true'
@@ -60,7 +69,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: angle.tar.gz
-          key: angle-${{ replace(github.event.inputs.angle-branch, '/', '-') }}-macos
+          key: ${{ steps.angle-key.outputs.key }}
 
       - name: Build ANGLE
         run: |
