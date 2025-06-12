@@ -36,14 +36,14 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: angle.tar.gz
-          key: angle-${{ replace(github.event.inputs['angle-branch'], '/', '-') }}-macos
+          key: angle-${{ replace(github.event.inputs.angle-branch, '/', '-') }}-macos
 
       - name: Clone ANGLE repository
         if: steps.cache-angle.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
           repository: google/angle
-          ref: ${{ github.event.inputs['angle-branch'] }}
+          ref: ${{ github.event.inputs.angle-branch }}
           path: angle
 
       - name: Synchronize ANGLE repository
@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: angle.tar.gz
-          key: angle-${{ replace(github.event.inputs['angle-branch'], '/', '-') }}-macos
+          key: angle-${{ replace(github.event.inputs.angle-branch, '/', '-') }}-macos
 
       - name: Build ANGLE
         run: |
