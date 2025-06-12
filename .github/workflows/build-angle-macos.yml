@@ -71,7 +71,7 @@ jobs:
           tar -xzf angle.tar.gz
           export PATH="${PWD}/depot_tools:${PATH}"
           cd angle
-          gn gen out/Release --args='is_debug=false angle_enable_d3d9=false angle_enable_d3d11=false angle_enable_gl=false angle_enable_metal=true angle_enable_null=false angle_enable_vulkan=false angle_enable_essl=false angle_enable_glsl=true'
+          gn gen out/Release --args='is_debug=false angle_enable_d3d9=false angle_enable_d3d11=false angle_enable_gl=false angle_enable_metal=true angle_enable_null=false angle_enable_vulkan=false angle_enable_essl=true angle_enable_glsl=false'
           ninja -j3 -k1 -C out/Release
 
       - name: Upload libEGL.dylib
