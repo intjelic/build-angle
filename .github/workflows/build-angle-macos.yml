@@ -51,8 +51,6 @@ jobs:
         run: |
           export PATH="${PWD}/depot_tools:${PATH}"
           cd angle
-          python scripts/bootstrap.py
-          gclient sync
           cd ../
           tar -czf angle.tar.gz angle
           rm -rf angle
