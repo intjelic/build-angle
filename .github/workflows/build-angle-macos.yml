@@ -1,0 +1,97 @@
+name: Build ANGLE (macOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      angle-branch:
+        description: 'Git branch of ANGLE to build'
+        required: true
+        default: chromium/7234
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Restore depot tools
+        id: cache-depot-tools
+        uses: actions/cache/restore@v4
+        with:
+          path: depot_tools
+          key: depot-tools-macos
+
+      - name: Install depot tools
+        if: steps.cache-depot-tools.outputs.cache-hit != 'true'
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+
+      - name: Cache depot tools
+        if: steps.cache-depot-tools.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: depot_tools
+          key: depot-tools-macos
+
+      - name: Restore ANGLE repository
+        id: cache-angle
+        uses: actions/cache/restore@v4
+        with:
+          path: angle.tar.gz
+          # XXX: Rename the key to remove the '/'  character
+          key: angle-${{ github.event.inputs['angle-branch'] }}-macos
+
+      - name: Clone ANGLE repository
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: google/angle
+          ref: ${{ github.event.inputs['angle-branch'] }}
+          path: angle
+
+      - name: Synchronize ANGLE repository
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        run: |
+          export PATH="${PWD}/depot_tools:${PATH}"
+          cd angle
+          python scripts/bootstrap.py
+          gclient sync
+          cd ../
+          tar -czf angle.tar.gz angle
+          rm -rf angle
+
+      - name: Cache ANGLE repository
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: angle.tar.gz
+          # XXX: Rename the key to remove the '/'  character
+          key: angle-${{ github.event.inputs['angle-branch'] }}-macos
+
+      - name: Build ANGLE
+        run: |
+          tar -xzf angle.tar.gz
+          export PATH="${PWD}/depot_tools:${PATH}"
+          cd angle
+          gn gen out/Release --args='is_debug=false angle_enable_d3d9=false angle_enable_d3d11=false angle_enable_gl=false angle_enable_metal=true angle_enable_null=false angle_enable_vulkan=false angle_enable_essl=false angle_enable_glsl=true'
+          ninja -j3 -k1 -C out/Release
+
+      - name: Upload libEGL.dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-angle-lib-egl
+          path: angle/out/Release/libEGL.dylib
+
+      - name: Upload libGLESv2.dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-angle-lib-gles2
+          path: angle/out/Release/libGLESv2.dylib
+
+      - name: Zip ANGLE build
+        run: |
+          tar -czf angle-build.tar.gz angle/out/Release/
+
+      - name: Upload ANGLE build
+        uses: actions/upload-artifact@v4
+        with:
+          name: angle-build-macos
+          path: angle-build.tar.gz
